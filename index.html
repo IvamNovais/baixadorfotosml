@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baixar Fotos Mercado Livre</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Baixar Fotos do Mercado Livre</h1>
+    <div class="form-group">
+      <label for="itemId">ID do Anúncio:</label>
+      <input type="text" id="itemId" placeholder="Digite o ID do anúncio" />
+      <button id="downloadButton">Baixar Fotos</button>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <!-- Adicionando dependências externas -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
