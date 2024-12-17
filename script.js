@@ -1,10 +1,10 @@
 const downloadButton = document.getElementById("downloadButton");
 const statusDiv = document.getElementById("status");
 
+// Token de acesso do Mercado Livre
 
-
-// Função para baixar fotos e vídeos
-async function baixarFotosEVideos() {
+// Função para baixar as fotos e organizá-las em pastas
+async function baixarFotos() {
   const itemId = document.getElementById("itemId").value.trim();
 
   if (!itemId) {
@@ -12,75 +12,74 @@ async function baixarFotosEVideos() {
     return;
   }
 
-  statusDiv.textContent = "Buscando fotos e vídeos...";
+  statusDiv.textContent = "Buscando fotos e variações...";
 
   try {
     // Requisição para obter detalhes do anúncio
     const response = await axios.get(`https://api.mercadolibre.com/items/${itemId}`, {
     });
 
-    const { pictures, video_id } = response.data;
+    const pictures = response.data.pictures;
+    const variations = response.data.variations;
 
-    // Verificar se há imagens
-    if ((!pictures || pictures.length === 0) && !video_id) {
-      statusDiv.textContent = "Nenhuma foto ou vídeo encontrada para este anúncio.";
+    // Verificar se existem fotos
+    if (!pictures || pictures.length === 0) {
+      statusDiv.textContent = "Nenhuma foto encontrada para este anúncio.";
       return;
     }
 
     // Criar o ZIP
     const zip = new JSZip();
-    const urlSet = new Set(); // Para evitar URLs duplicadas
 
-    // Fazer o download de cada foto
-    if (pictures && pictures.length > 0) {
-      for (let i = 0; i < pictures.length; i++) {
-        const picture = pictures[i];
+    // Caso existam variações, organizar fotos em pastas
+    if (variations && variations.length > 0) {
+      for (let i = 0; i < variations.length; i++) {
+        const variation = variations[i];
+        const variationId = variation.id;
+        const variationName = `variacao_${variation.attribute_combinations.map(Attr => {return Attr.value_name}).join(" - ")}`;
+        const folder = zip.folder(variationName);
 
-        // Evitar duplicatas
-        if (urlSet.has(picture.url)) continue;
-        urlSet.add(picture.url);
+        if (variation.picture_ids && variation.picture_ids.length > 0) {
+          for (let j = 0; j < variation.picture_ids.length; j++) {
+            const pictureId = variation.picture_ids[j];
+            const picture = pictures.find((p) => p.id === pictureId);
 
-        const photoResponse = await axios.get(picture.url, { responseType: "blob" });
-        zip.file(`foto_${i + 1}.jpg`, photoResponse.data);
-        statusDiv.textContent = `Baixando foto ${i + 1} de ${pictures.length}...`;
+            if (picture) {
+              const photoResponse = await axios.get(picture.url, { responseType: "blob" });
+              folder.file(`foto_${j + 1}.jpg`, photoResponse.data);
+              statusDiv.textContent = `Baixando foto ${j + 1} da variação ${variationId}...`;
+            }
+          }
+        }
       }
     }
 
-    // Fazer o download do vídeo, se existir
-    if (video_id) {
-      const videoUrl = `https://api.mercadolibre.com/videos/${video_id}`;
-      const videoResponse = await axios.get(videoUrl, {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${ACCESS_TOKEN}`,
-        },
-      });
-
-      // Evitar duplicatas de vídeos
-      if (!urlSet.has(videoUrl)) {
-        zip.file(`video_${video_id}.mp4`, videoResponse.data);
-        statusDiv.textContent = "Baixando vídeo...";
-        urlSet.add(videoUrl);
-      }
+    // Adicionar fotos "principais" fora das variações
+    const mainFolder = zip.folder("fotos_principais");
+    for (let i = 0; i < pictures.length; i++) {
+      const picture = pictures[i];
+      const photoResponse = await axios.get(picture.url, { responseType: "blob" });
+      mainFolder.file(`foto_${i + 1}.jpg`, photoResponse.data);
+      statusDiv.textContent = `Baixando foto principal ${i + 1}...`;
     }
 
     // Gerar o arquivo ZIP
-    statusDiv.textContent = "Compactando arquivos...";
+    statusDiv.textContent = "Compactando fotos...";
     const zipBlob = await zip.generateAsync({ type: "blob" });
 
     // Criar o link para download
     const zipUrl = URL.createObjectURL(zipBlob);
     const a = document.createElement("a");
     a.href = zipUrl;
-    a.download = `anuncio_${itemId}.zip`;
+    a.download = `fotos_${itemId}.zip`;
     a.click();
 
     statusDiv.textContent = "Download concluído!";
   } catch (error) {
     console.error(error);
-    statusDiv.textContent = "Erro ao baixar fotos ou vídeos. Verifique o ID do anúncio ou o token de acesso.";
+    statusDiv.textContent = "Erro ao baixar fotos. Verifique o ID do anúncio ou o token de acesso.";
   }
 }
 
 // Adicionar evento ao botão
-downloadButton.addEventListener("click", baixarFotosEVideos);
+downloadButton.addEventListener("click", baixarFotos);
