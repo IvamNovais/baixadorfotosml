@@ -45,7 +45,7 @@ async function baixarFotos() {
             const picture = pictures.find((p) => p.id === pictureId);
 
             if (picture) {
-              const photoResponse = await axios.get(picture.url.replace("http", "https"), { responseType: "blob" });
+              const photoResponse = await axios.get(picture.url.replace("http://", "https://"), { responseType: "blob" });
               folder.file(`foto_${j + 1}.jpg`, photoResponse.data);
               statusDiv.textContent = `Baixando foto ${j + 1} da variação ${variationId}...`;
             }
@@ -59,6 +59,8 @@ async function baixarFotos() {
     for (let i = 0; i < pictures.length; i++) {
       const picture = pictures[i];
       const photoResponse = await axios.get(picture.url.replace("http", "https"), { responseType: "blob" });
+      console.log(picture.url.replace("http://", "https://"));
+      
       mainFolder.file(`foto_${i + 1}.jpg`, photoResponse.data);
       statusDiv.textContent = `Baixando foto principal ${i + 1}...`;
     }
