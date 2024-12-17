@@ -58,7 +58,7 @@ async function baixarFotos() {
     const mainFolder = zip.folder("fotos_principais");
     for (let i = 0; i < pictures.length; i++) {
       const picture = pictures[i];
-      const photoResponse = await axios.get(picture.url, { responseType: "blob" });
+      const photoResponse = await axios.get(picture.url.replace("http", "https"), { responseType: "blob" });
       mainFolder.file(`foto_${i + 1}.jpg`, photoResponse.data);
       statusDiv.textContent = `Baixando foto principal ${i + 1}...`;
     }
