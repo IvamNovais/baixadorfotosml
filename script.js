@@ -45,7 +45,7 @@ async function baixarFotos() {
             const picture = pictures.find((p) => p.id === pictureId);
 
             if (picture) {
-              const photoResponse = await axios.get(picture.url, { responseType: "blob" });
+              const photoResponse = await axios.get(picture.url.replace("http", "https"), { responseType: "blob" });
               folder.file(`foto_${j + 1}.jpg`, photoResponse.data);
               statusDiv.textContent = `Baixando foto ${j + 1} da variação ${variationId}...`;
             }
